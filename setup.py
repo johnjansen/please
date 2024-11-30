@@ -1,4 +1,3 @@
-# Package setup configuration
 from setuptools import setup, find_packages
 
 setup(
@@ -6,13 +5,14 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        "click>=8.0.0",        # For CLI interface
-        "rich>=10.0.0",        # For beautiful terminal output
-        "prompt-toolkit>=3.0.0" # For interactive prompts
+        "click>=8.0.0",
+        "rich>=10.0.0",
+        "prompt-toolkit>=3.0.0",
+        "openai>=1.0.0"
     ],
     entry_points={
         "console_scripts": [
-            "please=please.cli.main:cli"
+            "please=please.cli.main:cli"  # Note: changed from cli.main:cli to just main:cli
         ],
     },
     author="John Jansen",
