@@ -33,3 +33,4 @@ ENV/
 # Testing
 .coverage
 htmlcov/
+.env

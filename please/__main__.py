@@ -1,1 +1,4 @@
-# Entry point for direct module execution
+from .cli.main import cli
+
+if __name__ == "__main__":
+    cli()
