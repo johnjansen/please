@@ -76,7 +76,6 @@ class CommandProcessor:
     def _get_context(self, query: str) -> str:
         """
         Get context from memory, respecting token limits.
-        Reserves tokens for the system prompt, query, and response.
         """
         if not self.last_command:
             return ""
@@ -91,18 +90,14 @@ class CommandProcessor:
             return ""
 
         # Build context with the last command
-        context_parts = []
-
-        # Add basic command info
-        basic_info = f"""
-        Last command: {self.last_command.bash_command}
-        Was successful: {self.last_command.successful}
-        """
-        context_parts.append(basic_info)
+        context_parts = [
+            f"Previous command: {self.last_command.bash_command}",
+            f"Was successful: {self.last_command.successful}"
+        ]
 
         # If we have result and room for it, add truncated result
         if self.last_command.result:
-            current_tokens = self._count_tokens("".join(context_parts))
+            current_tokens = self._count_tokens("\n".join(context_parts))
             result_tokens_available = available_tokens - current_tokens
 
             if result_tokens_available > 100:  # Only include if we can show meaningful amount
@@ -117,6 +112,10 @@ class CommandProcessor:
     SYSTEM_PROMPT = """
     You are a helpful CLI assistant that converts natural language inputs into bash commands.
 
+    If you see references like "that file" or "it", look at the context:
+    - Use the actual paths/files/commands from the previous command
+    - Don't use placeholder text like "path/to/that/file"
+
     If the input is a question or requires explanation:
     - Return a command that echoes an informative response
     - Format: ```bash
@@ -124,13 +123,21 @@ class CommandProcessor:
     ```
 
     If the input is an action request:
-    - Return the appropriate bash command
+    - Return the actual command(s) to perform the action
+    - DO NOT return an echo command that just describes the action
+    - If multiple steps are needed, join them with &&
     - Format: ```bash
-    actual_command --with --flags
+    command1 && command2
+    ```
+
+    Example with context:
+    Previous: echo '.ropeproject/*' >> ~/.gitignore_global
+    Input: "show me the content of that file"
+    Correct: ```bash
+    cat ~/.gitignore_global
     ```
 
     Return ONLY the command, no other text or explanations.
-    If multiple commands are needed, join them with &&.
     If a command could be dangerous, return an echo warning instead.
 
     Context from last command (if relevant):
